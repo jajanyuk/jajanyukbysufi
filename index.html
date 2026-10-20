@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JajanYuk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+  <div class="load-icon">🕡</div>
+  <div class="load-text">Menghubungkan...</div>
+</div>
+
+<div class="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">
+       <div>
+          <!-- Ganti 'logo.png' dengan nama file gambarmu yang sebenarnya -->
+          <img src="images/jajanyukLogo.png" alt="JajanYuk" class ="logo-icon">
+        </div>
+        <div>
+        <div class="logo-text">JajanYuk</div>
+		<div><p class="sub-text">by Sufi</p></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="header-date" id="headerDate"></div>
+          <button class="admin-badge is-user" id="adminBadge" onclick="openAdminModal()" title="Login Admin">👤 User</button>
+        </div>
+        <div class="sync-badge sync-loading" id="syncBadge">⏳ Menghubungkan</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="nav-btn" id="navBeranda" onclick="switchTab('beranda')"><span class="nav-icon">🏠</span>Beranda</button>
+      <button class="nav-btn active" id="navUtb" onclick="switchTab('utb')"><span class="nav-icon">🧃</span>UTB</button>
+      <button class="nav-btn" id="navMyOrders" onclick="switchTab('myorders')"><span class="nav-icon">📦</span>Pesananku</button>
+      <button class="nav-btn" id="navQris" onclick="switchTab('qris')"><span class="nav-icon">📲</span>QRIS</button>
+      <button class="nav-btn locked" id="navAntrian" onclick="switchTab('antrian')"><span class="nav-icon">🗒️</span>Antrian</button>
+      <button class="nav-btn locked" id="navPesanan" onclick="switchTab('pesanan')"><span class="nav-icon">📋</span>Pesanan</button>
+      <button class="nav-btn locked" id="navDeposit" onclick="switchTab('deposit')"><span class="nav-icon">💰</span>Deposit</button>
+      <button class="nav-btn locked" id="navRingkasan" onclick="switchTab('ringkasan')"><span class="nav-icon">📊</span>Ringkasan</button>
+      <button class="nav-btn locked" id="navTagihan" onclick="switchTab('tagihan')"><span class="nav-icon">🧾</span>Tagihan</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TAB: BERANDA (Katalog Menu) -->
+    <div class="tab-panel active" id="tab-beranda">
+
+      <div class="home-hero">
+        <div class="home-hero-icon">🍽️</div>
+        <div class="home-hero-title">Katalog Menu JajanYuk</div>
+        <div class="home-hero-sub">Lihat semua menu yang tersedia, lengkap dengan harga &amp; deskripsi</div>
+      </div>
+
+      <!-- Tombol tambah produk khusus admin -->
+      <button class="btn btn-primary" id="btnOpenProductForm" onclick="openProductForm()" style="display:none;margin-bottom:12px">➕ Tambah Produk Baru</button>
+
+      <!-- Form tambah/edit produk (khusus admin) -->
+      <div class="card" id="productFormCard" style="display:none">
+        <div class="section-title" id="productFormTitle">➕ Tambah Produk Baru</div>
+
+        <div class="product-form-upload" id="productImageDropzone" onclick="document.getElementById('productImageInput').click()">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Ketuk untuk upload gambar produk</div>
+        </div>
+        <input type="file" id="productImageInput" accept="image/*" style="display:none" onchange="handleProductImageUpload(event)">
+
+        <div class="form-group">
+          <label class="form-label">Nama Produk</label>
+          <input type="text" class="form-input" id="productName" placeholder="cth: Es Kopi Susu" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deskripsi</label>
+          <textarea class="form-input" id="productDesc" rows="3" style="resize:vertical" placeholder="Ceritakan tentang produk ini, rasa, bahan, dsb..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Harga (Rp)</label>
+          <input type="number" class="form-input" id="productPrice" placeholder="15000" min="0">
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);padding:10px 12px;border-radius:var(--radius-sm)">
+          <div>
+            <div class="form-label" style="margin-bottom:2px">Status Stok</div>
+            <div style="font-size:11px;color:var(--text3)" id="productAvailableHint">Produk tersedia &amp; bisa dipesan</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="productAvailable" checked onchange="document.getElementById('productAvailableHint').textContent = this.checked ? 'Produk tersedia & bisa dipesan' : 'Produk ditandai Habis'">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="closeProductForm()">Batal</button>
+          <button class="btn btn-primary" style="flex:1;justify-content:center" id="btnSaveProduct" onclick="saveProduct()">💾 Simpan Produk</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="section-title" style="margin-bottom:0">🧾 Semua Menu <span id="productCount">0 item</span></div>
+      </div>
+      <div id="productSortHint" style="display:none;font-size:11px;color:var(--text3);margin-bottom:10px">🔀 Tahan ikon <b>⠿</b> pada kartu lalu geser untuk mengatur urutan</div>
+
+      <div id="productEmptyHint" style="display:none;text-align:center;padding:40px 16px;color:var(--text3)">
+        <div style="font-size:38px;margin-bottom:8px">🍱</div>
+        <div style="font-size:13px;font-weight:600">Belum ada menu yang diupload</div>
+      </div>
+
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <!-- TAB: ANTRIAN -->
+    <div class="tab-panel" id="tab-antrian">
+
+      <!-- Input Card -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="section-title" style="margin-bottom:0">🗒️ Input Antrian</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-ghost" id="btnAntrianManual" onclick="setAntrianMode('manual')" style="font-size:12px;padding:6px 10px;background:var(--brand);color:white;border-color:var(--brand)">✏️ Manual</button>
+            <button class="btn btn-sm btn-ghost" id="btnAntrianBulk"   onclick="setAntrianMode('bulk')"   style="font-size:12px;padding:6px 10px">📋 Bulk</button>
+          </div>
+        </div>
+
+        <!-- Manual -->
+        <div id="antrianFormManual">
+          <div class="form-group">
+            <label class="form-label">📅 Tanggal Item</label>
+            <input type="date" class="form-input" id="antrianItemDate" style="padding:8px 10px;font-size:13px">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">Boleh dimajukan atau di-backdate, default hari ini</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nama Item</label>
+              <input type="text" class="form-input" id="antrianItem" placeholder="cth: Nasi Goreng" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Harga (Rp)</label>
+              <input type="number" class="form-input" id="antrianPrice" placeholder="15000" min="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Qty</label>
+              <input type="number" class="form-input" id="antrianQty" placeholder="1" min="1" value="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Catatan (opsional)</label>
+              <input type="text" class="form-input note-input" id="antrianNote" placeholder="cth: pedas, tanpa bawang">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btnAddAntrian" onclick="addAntrian()">➕ Tambah ke Antrian</button>
+        </div>
+
+        <!-- Bulk -->
+        <div id="antrianFormBulk" style="display:none">
+          <div class="form-group">
+            <label class="form-label">📅 Tanggal Item</label>
+            <input type="date" class="form-input" id="antrianBulkDate" style="padding:8px 10px;font-size:13px">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">Boleh dimajukan atau di-backdate, default hari ini</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Format: <span style="font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 6px;border-radius:4px">Item - Harga - Nama</span></label>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Nama pembeli boleh dikosongkan (isi nanti). Satu baris = satu item.</div>
+            <textarea id="antrianBulkInput" class="form-input" rows="5" style="font-family:'DM Mono',monospace;font-size:13px;resize:vertical;line-height:1.7" placeholder="Nasi Goreng - 15000&#10;Es Teh - 5000&#10;Mie Ayam - 12000 - Budi"></textarea>
+          </div>
+          <div id="antrianBulkPreview" style="display:none;margin-bottom:12px"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="previewAntrianBulk()">👁 Preview</button>
+            <button class="btn btn-primary" style="flex:1;justify-content:center" id="btnSubmitAntrianBulk" onclick="submitAntrianBulk()">📥 Masukkan Semua</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daftar Antrian -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="section-title" style="margin-bottom:0">⏳ Menunggu Pembeli <span id="antrianCount" style="font-size:13px;font-weight:500;color:var(--text2)">0 item</span></div>
+        <button class="btn btn-sm btn-ghost" id="btnClearAntrian" onclick="clearSentAntrian()" style="font-size:11px;display:none">🧹 Bersihkan Terkirim</button>
+      </div>
+      <!-- Filter Tanggal Antrian -->
+      <div class="filter-section">
+        <div class="filter-section-title">
+          📅 Filter Tanggal
+          <span class="active-filter-badge" id="antrianFilterBadge" style="display:none">Difilter</span>
+        </div>
+        <div class="date-shortcut-row">
+          <button class="date-shortcut active" id="antrianShortcutToday" onclick="setAntrianDateFilter('today',this)">Hari Ini</button>
+          <button class="date-shortcut" id="antrianShortcutYesterday" onclick="setAntrianDateFilter('yesterday',this)">Kemarin</button>
+          <button class="date-shortcut" id="antrianShortcutWeek" onclick="setAntrianDateFilter('week',this)">7 Hari</button>
+          <button class="date-shortcut" id="antrianShortcutAll" onclick="setAntrianDateFilter('all',this)">Semua</button>
+          <button class="date-shortcut" id="antrianShortcutCustom" onclick="setAntrianDateFilter('custom',this)">📅 Pilih</button>
+        </div>
+        <div id="antrianCustomDateWrap" style="display:none">
+          <div class="date-filter-bar">
+            <span class="date-label">Dari</span>
+            <input type="date" class="date-filter-input" id="antrianDateFrom" onchange="renderAntrian()">
+            <span class="date-label">s/d</span>
+            <input type="date" class="date-filter-input" id="antrianDateTo" onchange="renderAntrian()">
+          </div>
+        </div>
+      </div>
+      <div id="antrianList"></div>
+    </div>
+
+    <!-- TAB: PESANAN -->
+    <div class="tab-panel" id="tab-pesanan">
+      <!-- DELETE BY DATE CARD -->
+      <div class="delete-date-card" id="deleteDateCard">
+	  <div class="section-title" style="margin-bottom:8px;color:var(--red)">🗑️ Hapus Pesanan Berdasarkan Tanggal</div>
+	  <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Hapus semua pesanan dalam rentang tanggal tertentu. Aksi ini tidak bisa dibatalkan!</div>
+	  
+	  <!-- Input tanggal dalam 2 kolom -->
+	  <div class="form-row">
+		<div class="form-group" style="margin-bottom:8px;flex:1">
+		  <label class="form-label">Dari Tanggal</label>
+		  <input type="date" class="form-input" id="deleteDateFrom" style="padding:8px 10px;font-size:13px;width:100%">
+		</div>
+		<div class="form-group" style="margin-bottom:8px;flex:1">
+		  <label class="form-label">Sampai Tanggal</label>
+		  <input type="date" class="form-input" id="deleteDateTo" style="padding:8px 10px;font-size:13px;width:100%">
+		</div>
+	  </div>
+	  
+	  <!-- Tombol Hapus di baris terpisah dengan lebar penuh -->
+	  <button class="btn btn-danger" id="btnDeleteByDate" onclick="deleteOrdersByDate()" style="padding:10px 14px;font-size:13px;width:100%;margin-top:4px">🗑️ Hapus Pesanan</button>
+	  
+	  <div style="font-size:11px;color:var(--text3);margin-top:8px" id="deleteDateInfo">Masukkan rentang tanggal untuk menghapus pesanan</div>
+	</div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="section-title" style="margin-bottom:0">➕ Tambah Pesanan</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-ghost" id="btnModeManual" onclick="setInputMode('manual')" style="font-size:12px;padding:6px 10px;background:var(--brand);color:white;border-color:var(--brand)">✏️ Manual</button>
+            <button class="btn btn-sm btn-ghost" id="btnModeBulk" onclick="setInputMode('bulk')" style="font-size:12px;padding:6px 10px">📋 Bulk</button>
+          </div>
+        </div>
+
+        <!-- Manual Form -->
+        <div id="formManual">
+          <div class="form-group">
+            <label class="form-label">📅 Tanggal Item</label>
+            <input type="date" class="form-input" id="inItemDate" style="padding:8px 10px;font-size:13px">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">Boleh dimajukan atau di-backdate, default hari ini</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nama Pembeli</label>
+              <input type="text" class="form-input" id="inBuyer" placeholder="cth: Budi" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nama Item</label>
+              <input type="text" class="form-input" id="inItem" placeholder="cth: Nasi Goreng" autocomplete="off">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Harga (Rp)</label>
+              <input type="number" class="form-input" id="inPrice" placeholder="15000" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Qty</label>
+              <input type="number" class="form-input" id="inQty" placeholder="1" min="1" value="1">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catatan (opsional)</label>
+            <input type="text" class="form-input note-input" id="inNote" placeholder="cth: pedas level 2, tanpa bawang...">
+          </div>
+          <button class="btn btn-primary" id="btnAddOrder" onclick="addOrder()">➕ Tambah Pesanan</button>
+        </div>
+
+        <!-- Bulk Form -->
+        <div id="formBulk" style="display:none">
+          <div class="form-group">
+            <label class="form-label">📅 Tanggal Item</label>
+            <input type="date" class="form-input" id="bulkDate" style="padding:8px 10px;font-size:13px">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">Boleh dimajukan atau di-backdate, default hari ini</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Format: <span style="font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 6px;border-radius:4px">nama item - harga - nama pembeli</span></label>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Satu baris = satu pesanan. Harga boleh pakai titik/koma atau tanpa.</div>
+            <textarea id="bulkInput" class="form-input" rows="6" style="font-family:'DM Mono',monospace;font-size:13px;resize:vertical;line-height:1.7" placeholder="Nasi Goreng - 15000 - Budi&#10;Es Teh - 5000 - Siti&#10;Mie Ayam - 12000 - Budi&#10;Bakso - 18000 - Rina"></textarea>
+          </div>
+          <div id="bulkPreview" style="display:none;margin-bottom:12px"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="previewBulk()">👁 Preview</button>
+            <button class="btn btn-primary" style="flex:1;justify-content:center" id="btnSubmitBulk" onclick="submitBulk()">📥 Masukkan Semua</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">📋 Pesanan <span id="orderCount">0 item</span> <span id="todayDebug" style="font-size:10px;color:var(--text3);font-weight:400"></span></div>
+      <!-- Filter Section -->
+      <div class="filter-section">
+        <div class="filter-section-title">
+          🔍 Filter &amp; Cari
+          <span class="active-filter-badge" id="pesananFilterBadge" style="display:none">Difilter</span>
+        </div>
+        <div class="filter-row" style="margin-bottom:8px">
+          <input type="text" class="filter-input" id="filterBuyer" placeholder="🔍 Cari nama pembeli...">
+          <select class="form-select" style="width:auto;font-size:13px;padding:8px 10px;flex-shrink:0" id="filterStatus">
+            <option value="">Semua</option>
+            <option value="unpaid">Belum Bayar</option>
+            <option value="paid">Sudah Bayar</option>
+          </select>
+        </div>
+        <div class="filter-row" style="margin-bottom:8px;gap:6px">
+          <span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0">Urutkan:</span>
+          <button class="sort-btn active" id="pesananSortBuyerBtn" onclick="setPesananSortField('buyer')" title="Urutkan nama pembeli">👤 Pembeli A↑Z</button>
+          <button class="sort-btn" id="pesananSortItemBtn" onclick="setPesananSortField('item')" title="Urutkan nama item">🍱 Item A↑Z</button>
+        </div>
+        <div class="date-shortcut-row" style="margin-bottom:6px">
+          <button class="date-shortcut active" id="pesananShortcutToday" onclick="setPesananDateFilter('today',this)">Hari Ini</button>
+          <button class="date-shortcut" id="pesananShortcutYesterday" onclick="setPesananDateFilter('yesterday',this)">Kemarin</button>
+          <button class="date-shortcut" id="pesananShortcutWeek" onclick="setPesananDateFilter('week',this)">7 Hari</button>
+          <button class="date-shortcut" id="pesananShortcutAll" onclick="setPesananDateFilter('all',this)">Semua</button>
+          <button class="date-shortcut" id="pesananShortcutCustom" onclick="setPesananDateFilter('custom',this)">📅 Pilih</button>
+        </div>
+        <div id="pesananCustomDateWrap" style="display:none">
+          <div class="date-filter-bar" style="margin-bottom:0">
+            <span class="date-label">Dari</span>
+            <input type="date" class="date-filter-input" id="pesananDateFrom" onchange="window.renderOrders()">
+            <span class="date-label">s/d</span>
+            <input type="date" class="date-filter-input" id="pesananDateTo" onchange="window.renderOrders()">
+          </div>
+        </div>
+      </div>
+      <div class="orders-list" id="orderList"></div>
+    </div>
+
+    <!-- TAB: DEPOSIT -->
+    <div class="tab-panel" id="tab-deposit">
+      <div class="card">
+        <div class="section-title">💰 Tambah Deposit</div>
+        <div class="form-group">
+          <label class="form-label">Nama Penyimpan</label>
+          <input type="text" class="form-input" id="depName" placeholder="cth: Siti" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jumlah Deposit (Rp)</label>
+          <input type="number" class="form-input" id="depAmount" placeholder="50000" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catatan</label>
+          <input type="text" class="form-input note-input" id="depNote" placeholder="cth: titip buat besok">
+        </div>
+        <button class="btn btn-primary" id="btnAddDeposit" onclick="addDeposit()">💰 Simpan Deposit</button>
+      </div>
+
+      <!-- Ringkasan Deposit -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+        <div class="stat-card" style="padding:10px">
+          <div class="stat-label" style="font-size:10px">Total Deposit</div>
+          <div class="stat-value blue" style="font-size:14px" id="totalDeposit">Rp 0</div>
+        </div>
+        <div class="stat-card" style="padding:10px">
+          <div class="stat-label" style="font-size:10px">Terpakai</div>
+          <div class="stat-value" style="font-size:14px;color:var(--amber)" id="totalDepositUsed">Rp 0</div>
+        </div>
+        <div class="stat-card" style="padding:10px">
+          <div class="stat-label" style="font-size:10px">Sisa</div>
+          <div class="stat-value green" style="font-size:14px" id="totalDepositSisa">Rp 0</div>
+        </div>
+      </div>
+
+      <div class="section-title">💼 Daftar Deposit <span id="depCount"></span></div>
+      <div id="depositList"></div>
+    </div>
+
+    <!-- TAB: RINGKASAN -->
+    <div class="tab-panel" id="tab-ringkasan">
+      <div class="period-tabs-wrap">
+        <div class="period-tabs">
+          <button class="period-tab active" onclick="setPeriod('daily', this)">Harian</button>
+          <button class="period-tab" onclick="setPeriod('weekly', this)">Mingguan</button>
+          <button class="period-tab" onclick="setPeriod('monthly', this)">Bulanan</button>
+          <button class="period-tab" id="periodTabCustom" onclick="setPeriod('custom', this)">📅 Pilih</button>
+        </div>
+        <div id="summaryCustomDateWrap" style="display:none;margin-top:8px">
+          <div class="summary-date-range">
+            <span class="summary-date-range-label">Dari</span>
+            <input type="date" class="date-filter-input" id="summaryDateFrom" onchange="renderSummary()">
+            <span class="summary-date-range-label">s/d</span>
+            <input type="date" class="date-filter-input" id="summaryDateTo" onchange="renderSummary()">
+          </div>
+        </div>
+      </div>
+      <div id="summaryContent"></div>
+    </div>
+
+    <!-- TAB: TAGIHAN -->
+    <div class="tab-panel" id="tab-tagihan">
+      <!-- Filter Tanggal Tagihan -->
+      <div class="tagihan-filter">
+        <div class="filter-section-title" style="margin-bottom:10px">
+          📅 Filter Tanggal Tagihan
+          <span class="active-filter-badge" id="tagihanFilterBadge" style="display:none">Difilter</span>
+        </div>
+        <div class="date-shortcut-row" style="margin-bottom:8px">
+          <button class="date-shortcut active" id="tagihanShortcutToday" onclick="setTagihanDateFilter('today',this)">Hari Ini</button>
+          <button class="date-shortcut" id="tagihanShortcutYesterday" onclick="setTagihanDateFilter('yesterday',this)">Kemarin</button>
+          <button class="date-shortcut" id="tagihanShortcutWeek" onclick="setTagihanDateFilter('week',this)">7 Hari</button>
+          <button class="date-shortcut" id="tagihanShortcutAll" onclick="setTagihanDateFilter('all',this)">Semua</button>
+          <button class="date-shortcut" id="tagihanShortcutCustom" onclick="setTagihanDateFilter('custom',this)">📅 Pilih</button>
+        </div>
+        <div id="tagihanCustomDateWrap" style="display:none">
+          <div class="tagihan-filter-row">
+            <span class="date-label">Dari</span>
+            <input type="date" class="date-filter-input" id="tagihanDateFrom" onchange="window.renderBuyerList()">
+            <span class="date-label">s/d</span>
+            <input type="date" class="date-filter-input" id="tagihanDateTo" onchange="window.renderBuyerList()">
+          </div>
+        </div>
+      </div>
+      <div id="unpaidBanner"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="section-title" style="margin-bottom:0">🧾 Pilih Pembeli</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="text" class="filter-input" id="filterTagihanBuyer" placeholder="🔍 Cari nama..." style="width:130px;font-size:12px;padding:7px 10px">
+          <select id="tagihanSortField" onchange="onTagihanSortChange()" style="padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;outline:none;color:var(--text);background:var(--surface);font-weight:700;cursor:pointer;max-width:90px">
+            <option value="name">Nama</option>
+            <option value="total">Total</option>
+            <option value="unpaid">Belum Bayar</option>
+            <option value="count">Jml Item</option>
+          </select>
+          <button class="sort-btn active" id="tagihanSortBtn" onclick="toggleTagihanSort()" title="Urutkan">A↑Z</button>
+        </div>
+      </div>
+      <div id="buyerList"></div>
+      <div id="billPreview"></div>
+    </div>
+
+    <!-- TAB: UTB -->
+    <div class="tab-panel" id="tab-utb">
+    <!-- FITUR BARU: Admin Control untuk Buka/Tutup Toko -->
+          <div id="utbAdminControl" class="card" style="display:none; margin-bottom:14px; background:var(--surface2);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:14px; font-weight:800; color:var(--text);">Status Toko JajanYuk</div>
+                <div style="font-size:11px; color:var(--text3); margin-top:2px;">Jika aktif, user biasa akan melihat layar libur</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="storeClosedToggle" onchange="toggleStoreStatus(this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        <div id="utbClosedUI" style="display:none;" class="closed-store-card">
+        <div class="closed-store-icon">😴</div>
+        <div class="closed-store-title">Mohon maaf, JajanYuk Libur</div>
+      </div>  
+
+      <div class="card utb-name-card" id="utbNamePrompt" style="display:none">
+        <div class="utb-name-icon">♨️</div>
+        <div class="utb-name-title">Masukkan Nama Kamu</div>
+        <div class="utb-name-sub">Nama ini akan dipakai untuk mencatat pesanan kamu di UTB</div>
+        <div class="form-group" style="text-align:left">
+          <input type="text" class="form-input" id="utbNameInput" placeholder="cth: Budi" autocomplete="off" onkeydown="if(event.key==='Enter') utbSetName()">
+        </div>
+        <button class="btn btn-primary" onclick="utbSetName()">✅ Masuk</button>
+      </div>
+
+      <div id="utbMain" style="display:none">
+        <div class="card utb-user-bar">
+          <div class="utb-user-bar-name"><span>Nama Kamu</span><span id="utbCurrentName">-</span></div>
+          <button class="btn btn-sm btn-ghost" onclick="utbChangeName()">🔄 Ganti Nama</button>
+        </div>
+        <!-- NEW CODE: Running Text Reminder -->
+        <div class="running-text-container">
+          <div class="running-text">
+            ⚠️ PERHATIAN: Setelah pilih item, jangan lupa klik tombol "✅ Order" di bagian bawah layar agar pesanan masuk ke admin! ⚠️
+          </div>
+        </div>
+        <!-- END NEW CODE -->
+        <div class="section-title">🧃 Daftar UTB <span id="utbCount">0 item</span></div>
+        <div class="utb-list" id="utbList"></div>
+      </div>
+
+      <div class="utb-order-bar" id="utbOrderBar" style="display:none">
+        <button class="btn btn-primary w-full" onclick="openUtbConfirm()">✅ Order (<span id="utbSelectedCount">0</span> item · <span id="utbSelectedTotal">Rp 0</span>)</button>
+      </div>
+    </div>
+
+    <!-- TAB: PESANANKU (dashboard item UTB yang sudah dipesan) -->
+    <div class="tab-panel" id="tab-myorders">
+
+      <!-- Info pesanan yang masih pending / belum disubmit dari UTB -->
+      <div id="myOrdersPendingCard"></div>
+
+      <!-- Ringkasan -->
+      <div class="card" id="myOrdersSummaryCard">
+        <div class="section-title" style="margin-bottom:2px" id="myOrdersTitle">📦 Pesananku</div>        
+      </div>
+
+      <!-- Khusus admin: atur tanggal antrian mana yang boleh dilihat user biasa -->
+      <div class="filter-section" id="myOrdersAdminManageWrap" style="display:none">
+        <div class="filter-section-title">⚙️ Atur Tampilan Untuk User (Berdasarkan Tanggal Antrian)</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Nyalakan tanggal yang datanya boleh dilihat user biasa di tab Pesananku. Admin selalu bisa melihat semua data, apapun statusnya.</div>
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <button class="btn btn-sm btn-ghost" style="flex:1;justify-content:center;font-size:11px" onclick="setAllPesanankuVisibility(true)">✅ Tampilkan Semua</button>
+          <button class="btn btn-sm btn-ghost" style="flex:1;justify-content:center;font-size:11px" onclick="setAllPesanankuVisibility(false)">🚫 Sembunyikan Semua</button>
+        </div>
+        <div id="myOrdersDateToggleList"></div>
+      </div>
+
+      <!-- Pencarian berdasarkan nama -->
+      <div class="filter-section" id="myOrdersAdminFilterWrap">
+        <div class="filter-section-title">🔍 Cari Pesanan</div>
+        <div class="filter-row">
+          <input type="text" class="filter-input" id="filterMyOrdersBuyer" placeholder="🔍 Cari nama pemesan...">
+        </div>
+      </div>
+
+      <div class="section-title">🧾 Riwayat Pesanan <span id="myOrdersCount">0 item</span></div>
+      <div class="orders-list" id="myOrdersList"></div>
+    </div>
+
+    <!-- TAB: QRIS -->
+    <div class="tab-panel" id="tab-qris">
+      <div id="qrisUploadCard" style="display:none"></div>
+      <div id="qrisEmptyHint"  style="display:none"></div>
+      <div id="qrisNominalList" style="display:none"></div>
+      <input type="file" id="qrisFileInput" accept="image/*" style="display:none" onchange="handleQrisUpload(event)">
+
+      <div id="qrisDisplay">
+        <div class="qris-frame" id="qrisFrame" onclick="openQrisFullscreen()" style="border-radius:var(--radius);overflow:hidden;cursor:pointer;border:1px solid var(--border)">
+          <img id="qrisImg" src="" alt="QRIS" style="width:100%;display:block">
+          <div class="qris-tap-hint">👆 Ketuk untuk perbesar</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- QRIS FULLSCREEN OVERLAY -->
+  <div id="qrisOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+    <div style="width:100%;max-width:480px;text-align:center">
+      <div style="color:white;font-size:14px;font-weight:700;margin-bottom:8px;opacity:0.7">Scan QRIS untuk Bayar</div>
+      <div id="qrisOverlayNominal" style="color:white;font-size:22px;font-weight:800;margin-bottom:16px;font-family:'DM Mono',monospace"></div>
+      <div style="background:white;border-radius:16px;padding:16px;display:inline-block;width:100%;max-width:320px">
+        <img id="qrisImgFull" src="" alt="QRIS" style="width:100%;border-radius:8px;display:block">
+        <div style="margin-top:10px;font-size:12px;color:#888;font-weight:600">Powered by JajanYuk 🍜</div>
+      </div>
+      <button onclick="closeQrisFullscreen()" style="display:block;margin:20px auto 0;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);color:white;padding:12px 32px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">✕ Tutup</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADMIN PIN MODAL -->
+<div id="adminModal">
+  <div class="admin-modal-box">
+    <div class="admin-modal-icon" id="adminModalIcon">🔐</div>
+    <div class="admin-modal-title" id="adminModalTitle">Masuk sebagai Admin</div>
+    <div class="admin-modal-sub" id="adminModalSub">Masukkan PIN untuk mengakses semua fitur</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-error-msg" id="pinErrorMsg"></div>
+    <div class="pin-numpad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key" onclick="pinClear()" style="font-size:13px;color:var(--text2)">Batal</button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key del" onclick="pinDelete()">⌫</button>
+    </div>
+  </div>
+</div>
+
+<!-- UTB ORDER CONFIRM MODAL -->
+<div id="utbConfirmModal">
+  <div class="utb-confirm-box">
+    <div class="utb-confirm-icon">♨️</div>
+    <div class="utb-confirm-title">Konfirmasi Pesanan</div>
+    <div class="utb-confirm-note" style="font-size:11px;font-weight:bold;">
+      Untuk payment silahkan ke tab QRIS dan kirim bukti bayar ke grup whatsapp
+    </div>
+    <div class="utb-confirm-buyer">👤 <span id="utbConfirmBuyerName">-</span></div>
+    <div class="utb-confirm-list" id="utbConfirmList"></div>
+    <div class="utb-confirm-total-row">
+      <span>Total</span>
+      <span id="utbConfirmTotal">Rp 0</span>
+    </div>
+    <div class="utb-confirm-actions">
+      <button class="btn btn-ghost" onclick="closeUtbConfirm()" style="flex:1;justify-content:center">Batal</button>
+      <button class="btn btn-primary" id="utbConfirmBtn" onclick="submitUtbOrder()" style="flex:1;justify-content:center">✅ Kirim Pesanan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- PRODUCT DETAIL MODAL -->
+<div id="productDetailModal">
+  <div class="product-detail-box">
+    <button class="product-detail-close" onclick="closeProductDetail()">✕</button>
+    <div class="product-detail-img-wrap" id="productDetailImgWrap"></div>
+    <div class="product-detail-body">
+      <div class="product-detail-name" id="productDetailName"></div>
+      <div class="product-detail-price" id="productDetailPrice"></div>
+      <div class="product-detail-desc-label">📝 Deskripsi</div>
+      <div class="product-detail-desc" id="productDetailDesc"></div>
+      <div id="productDetailAdminActions" style="display:none;gap:8px;margin-top:18px">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="editProductFromDetail()">✏️ Edit</button>
+        <button class="btn btn-danger" style="flex:1;justify-content:center" onclick="deleteProductFromDetail()">🗑️ Hapus</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================
+     FIREBASE + APP LOGIC (external module file)
+============================================================ -->
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
